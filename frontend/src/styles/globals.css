@@ -1,0 +1,121 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  @apply bg-slate-50 text-slate-900 antialiased;
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
+
+/* Assistant chat — markdown + KaTeX */
+.assistant-message {
+  overflow-x: auto;
+  line-height: 1.6;
+}
+
+.assistant-message p {
+  margin: 0.4rem 0;
+}
+
+.assistant-message p:first-child {
+  margin-top: 0;
+}
+
+.assistant-message p:last-child {
+  margin-bottom: 0;
+}
+
+.assistant-message ol,
+.assistant-message ul {
+  margin: 0.4rem 0;
+  padding-left: 1.35rem;
+}
+
+.assistant-message ol {
+  list-style-type: decimal;
+}
+
+.assistant-message ul {
+  list-style-type: disc;
+}
+
+.assistant-message li {
+  margin: 0.2rem 0;
+}
+
+.assistant-message strong {
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.assistant-message code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.85em;
+  padding: 0.15rem 0.35rem;
+  border-radius: 0.375rem;
+  background-color: #f1f5f9;
+  color: #4338ca;
+}
+
+.assistant-message pre {
+  margin: 0.5rem 0;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background-color: #0f172a;
+  color: #f8fafc;
+  overflow-x: auto;
+  font-size: 0.825rem;
+}
+
+.assistant-message pre code {
+  background-color: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+.assistant-message .katex {
+  font-size: 1.05em;
+}
+
+.assistant-message .katex-display {
+  margin: 0.6rem 0;
+  padding: 0.4rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* Subtle frosted glass and animations */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+}
+
+.glass-panel-dark {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(51, 65, 85, 0.5);
+}

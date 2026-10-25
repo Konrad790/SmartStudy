@@ -1,0 +1,21 @@
+{
+  "name": "smartstudy",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SmartStudy - Interactive AI Whiteboard Platform",
+  "scripts": {
+    "dev": "npm run dev --prefix frontend",
+    "dev:front": "npm run dev --prefix frontend",
+    "dev:api": "cd backend && .venv/bin/uvicorn app.main:app --reload --port 8000",
+    "build": "npm run build --prefix frontend",
+    "start": "npm run start --prefix frontend",
+    "lint": "npm run lint --prefix frontend",
+    "test": "npm run test --prefix frontend",
+    "test:watch": "npm run test:watch --prefix frontend",
+    "test:e2e": "npm run test:e2e --prefix frontend",
+    "db:migrate": "cd backend && .venv/bin/alembic upgrade head",
+    "db:stamp": "cd backend && .venv/bin/alembic stamp head",
+    "db:up": "docker compose up -d postgres",
+    "db:down": "docker compose down"
+  }
+}

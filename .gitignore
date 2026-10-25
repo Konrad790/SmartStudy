@@ -1,0 +1,52 @@
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Node / Frontend
+node_modules/
+.next/
+dist/
+build/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python / Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+ENV/
+env/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Testing & Reports
+coverage/
+test-results/
+playwright-report/
+blob-report/
+
+
+#Specs
+.cursor/
+.specify/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+.vscode/
+.idea/

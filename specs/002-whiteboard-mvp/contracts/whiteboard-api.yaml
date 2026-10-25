@@ -1,0 +1,370 @@
+openapi: 3.1.0
+info:
+  title: Whiteboard MVP API
+  version: 0.1.0
+  description: Contract for board lifecycle, autosave, and local-AI assistant workflows.
+servers:
+  - url: http://localhost:3000
+paths:
+  /api/boards:
+    get:
+      summary: List authenticated user's boards
+      responses:
+        "200":
+          description: Board list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Board"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      summary: Create board
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 120
+      responses:
+        "201":
+          description: Board created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/boards/{boardId}:
+    delete:
+      summary: Soft delete board
+      parameters:
+        - $ref: "#/components/parameters/BoardId"
+      responses:
+        "200":
+          description: Board soft deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [deleted, restoreUntil]
+                properties:
+                  deleted:
+                    type: boolean
+                  restoreUntil:
+                    type: string
+                    format: date-time
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/boards/{boardId}/restore:
+    post:
+      summary: Restore soft-deleted board within 30 days
+      parameters:
+        - $ref: "#/components/parameters/BoardId"
+      responses:
+        "200":
+          description: Board restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/boards/{boardId}/snapshot:
+    get:
+      summary: Load latest board snapshot
+      parameters:
+        - $ref: "#/components/parameters/BoardId"
+      responses:
+        "200":
+          description: Latest snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BoardSnapshot"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      summary: Save autosave snapshot (debounced client writes)
+      parameters:
+        - $ref: "#/components/parameters/BoardId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [baseVersion, sceneJson]
+              properties:
+                baseVersion:
+                  type: integer
+                  minimum: 0
+                sceneJson:
+                  type: object
+                  additionalProperties: true
+      responses:
+        "200":
+          description: Snapshot stored
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [version, staleWarning]
+                properties:
+                  version:
+                    type: integer
+                  staleWarning:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/boards/{boardId}/assistant/chat:
+    post:
+      summary: Send assistant chat message (local Ollama by default)
+      parameters:
+        - $ref: "#/components/parameters/BoardId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  minLength: 1
+                  maxLength: 4000
+      responses:
+        "200":
+          description: Assistant response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssistantReply"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          description: AI provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/boards/{boardId}/assistant/generate:
+    post:
+      summary: Generate node proposal from text (requires explicit confirm)
+      parameters:
+        - $ref: "#/components/parameters/BoardId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [prompt]
+              properties:
+                prompt:
+                  type: string
+                  minLength: 1
+                  maxLength: 4000
+      responses:
+        "200":
+          description: Node proposal
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [proposalId, nodes]
+                properties:
+                  proposalId:
+                    type: string
+                    format: uuid
+                  nodes:
+                    type: array
+                    items:
+                      type: object
+                      additionalProperties: true
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          description: AI provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /api/boards/{boardId}/assistant/generate/{proposalId}/confirm:
+    post:
+      summary: Confirm and apply generated nodes to board
+      parameters:
+        - $ref: "#/components/parameters/BoardId"
+        - in: path
+          name: proposalId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: Proposal applied
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [applied]
+                properties:
+                  applied:
+                    type: boolean
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/boards/{boardId}/assistant/summary:
+    get:
+      summary: Summarize board content
+      parameters:
+        - $ref: "#/components/parameters/BoardId"
+      responses:
+        "200":
+          description: Board summary
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [summary]
+                properties:
+                  summary:
+                    type: string
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "503":
+          description: AI provider unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  parameters:
+    BoardId:
+      in: path
+      name: boardId
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    Unauthorized:
+      description: Auth required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Forbidden:
+      description: Access denied
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource missing
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    BadRequest:
+      description: Input validation failed
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    Board:
+      type: object
+      required: [id, title, isDeleted, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        isDeleted:
+          type: boolean
+        deletedAt:
+          type: string
+          format: date-time
+          nullable: true
+        purgeAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    BoardSnapshot:
+      type: object
+      required: [boardId, version, sceneJson, createdAt]
+      properties:
+        boardId:
+          type: string
+          format: uuid
+        version:
+          type: integer
+        sceneJson:
+          type: object
+          additionalProperties: true
+        createdAt:
+          type: string
+          format: date-time
+    AssistantReply:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+    ErrorResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+        code:
+          type: string
